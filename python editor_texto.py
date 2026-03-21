@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import scrolledtext, messagebox, simpledialog
 
 # =========================
-# CLASE STACK (OBLIGATORIA)
+# CLASE STACK (FEEDBACK)
 # =========================
 class Stack:
     def __init__(self):
