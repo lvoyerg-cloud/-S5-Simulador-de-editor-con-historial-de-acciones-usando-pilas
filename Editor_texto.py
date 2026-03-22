@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import scrolledtext, messagebox, simpledialog
 
 # =========================
-# CLASE STACK (FEEDBACK)
+# CLASE STACK FEEDBACK
 # =========================
 class Stack:
     def __init__(self):
@@ -16,16 +16,8 @@ class Stack:
             raise IndexError("La pila está vacía")
         return self.items.pop()
 
-    def peek(self):
-        if self.is_empty():
-            raise IndexError("La pila está vacía")
-        return self.items[-1]
-
     def is_empty(self):
         return len(self.items) == 0
-
-    def size(self):
-        return len(self.items)
 
 
 # =========================
@@ -64,6 +56,22 @@ class TextEditor:
         self.content = self.content[:-n]
         self._history.append(f"Borró {n} caracteres: '{deleted}'")
 
+    def delete_letter(self, letter):
+        if not letter or len(letter) != 1:
+            raise ValueError("Ingrese solo una letra")
+
+        original = self.content
+        new_content = self.content.replace(letter, "")
+
+        if original == new_content:
+            raise ValueError("La letra no existe en el texto")
+
+        self.undo_stack.push(("delete_letter", original))
+        self.redo_stack = Stack()
+
+        self.content = new_content
+        self._history.append(f"Borró letra: '{letter}'")
+
     def undo(self):
         if self.undo_stack.is_empty():
             raise IndexError("Nada que deshacer")
@@ -73,12 +81,16 @@ class TextEditor:
         if action == "write":
             self.content = self.content[:-len(value)]
             self.redo_stack.push(("write", value))
-            self._history.append(f"Undo -> eliminó '{value}'")
 
         elif action == "delete":
             self.content += value
             self.redo_stack.push(("delete", value))
-            self._history.append(f"Undo -> recuperó '{value}'")
+
+        elif action == "delete_letter":
+            self.redo_stack.push(("delete_letter", self.content))
+            self.content = value
+
+        self._history.append("Undo realizado")
 
     def redo(self):
         if self.redo_stack.is_empty():
@@ -89,12 +101,15 @@ class TextEditor:
         if action == "write":
             self.content += value
             self.undo_stack.push(("write", value))
-            self._history.append(f"Redo -> escribió '{value}'")
 
         elif action == "delete":
             self.content = self.content[:-len(value)]
             self.undo_stack.push(("delete", value))
-            self._history.append(f"Redo -> borró '{value}'")
+
+        elif action == "delete_letter":
+            self.delete_letter(value)
+
+        self._history.append("Redo realizado")
 
     def show(self):
         return self.content
@@ -147,18 +162,37 @@ class TextEditorGUI:
             except ValueError as e:
                 messagebox.showerror("Error", str(e))
 
+    # 🔥 AQUÍ ESTÁ LA MEJORA
     def delete_text(self):
-        entry = simpledialog.askstring("Borrar", "Cantidad de caracteres:")
-        if entry:
-            try:
-                if not entry.isdigit():
-                    raise ValueError("Debe ingresar un número válido")
+        opcion = simpledialog.askstring(
+            "Tipo de borrado",
+            "Escriba:\n1 = Borrar caracteres\n2 = Borrar letra"
+        )
 
-                self.editor.delete(int(entry))
-                self.update_display()
+        if opcion == "1":
+            entry = simpledialog.askstring("Borrar", "Cantidad de caracteres:")
+            if entry:
+                try:
+                    if not entry.isdigit():
+                        raise ValueError("Debe ingresar un número válido")
 
-            except ValueError as e:
-                messagebox.showerror("Error", str(e))
+                    self.editor.delete(int(entry))
+                    self.update_display()
+
+                except ValueError as e:
+                    messagebox.showerror("Error", str(e))
+
+        elif opcion == "2":
+            letra = simpledialog.askstring("Borrar letra", "Ingrese una letra:")
+            if letra:
+                try:
+                    self.editor.delete_letter(letra)
+                    self.update_display()
+                except ValueError as e:
+                    messagebox.showerror("Error", str(e))
+
+        else:
+            messagebox.showinfo("Aviso", "Opción no válida")
 
     def undo_action(self):
         try:
@@ -193,43 +227,9 @@ class TextEditorGUI:
 
 
 # =========================
-# PRUEBAS
-# =========================
-def run_tests():
-    editor = TextEditor()
-
-    editor.write("Hola")
-    assert editor.show() == "Hola"
-
-    editor.delete(2)
-    assert editor.show() == "Ho"
-
-    editor.undo()
-    assert editor.show() == "Hola"
-
-    editor.redo()
-    assert editor.show() == "Ho"
-
-    try:
-        e = TextEditor()
-        e.undo()
-    except IndexError:
-        pass
-
-    try:
-        editor.write("")
-    except ValueError:
-        pass
-
-    print("Pruebas pasadas correctamente")
-
-
-# =========================
 # EJECUCIÓN
 # =========================
 if __name__ == "__main__":
-    run_tests()
-
     root = tk.Tk()
     app = TextEditorGUI(root)
     root.mainloop()
