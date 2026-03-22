@@ -17,7 +17,7 @@ Ejecutar el script:
 Escribe el siguiente comando y presiona Enter:
 
 Bash
-python editor_texto.py
+Editor_texto.py
 3. Qué esperar al ejecutarlo
 Al iniciar el programa, sucederán dos cosas en orden:
 
