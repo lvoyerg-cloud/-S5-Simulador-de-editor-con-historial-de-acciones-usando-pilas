@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import scrolledtext, messagebox, simpledialog
 
 # =========================
-# CLASE STACK FEEDBACK
+# CLASE STACK FEEBACK
 # =========================
 class Stack:
     def __init__(self):
@@ -162,7 +162,6 @@ class TextEditorGUI:
             except ValueError as e:
                 messagebox.showerror("Error", str(e))
 
-    # 🔥 AQUÍ ESTÁ LA MEJORA
     def delete_text(self):
         opcion = simpledialog.askstring(
             "Tipo de borrado",
